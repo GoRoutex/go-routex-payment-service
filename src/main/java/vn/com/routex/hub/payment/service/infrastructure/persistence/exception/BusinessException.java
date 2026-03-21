@@ -1,7 +1,7 @@
 package vn.com.routex.hub.payment.service.infrastructure.persistence.exception;
 
 import lombok.EqualsAndHashCode;
-import vn.com.routex.hub.payment.service.controller.model.result.ApiResult;
+import vn.com.routex.hub.payment.service.interfaces.models.result.ApiResult;
 
 @EqualsAndHashCode(callSuper = true)
 public class BusinessException extends BaseException {

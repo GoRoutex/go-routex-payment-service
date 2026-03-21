@@ -3,7 +3,7 @@ package vn.com.routex.hub.payment.service.infrastructure.persistence.exception;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import vn.com.routex.hub.payment.service.controller.model.result.ApiResult;
+import vn.com.routex.hub.payment.service.interfaces.models.result.ApiResult;
 
 @Data
 @Builder(toBuilder = true)

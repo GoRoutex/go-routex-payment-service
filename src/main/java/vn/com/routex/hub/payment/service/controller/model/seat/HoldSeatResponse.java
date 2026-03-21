@@ -1,11 +1,11 @@
-package vn.com.routex.hub.payment.service.controller.model.seat;
+package vn.com.routex.hub.payment.service.interfaces.models.seat;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import vn.com.routex.hub.payment.service.controller.model.base.BaseResponse;
+import vn.com.routex.hub.payment.service.interfaces.models.base.BaseResponse;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;

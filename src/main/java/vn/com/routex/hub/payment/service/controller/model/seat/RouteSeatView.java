@@ -1,4 +1,4 @@
-package vn.com.routex.hub.payment.service.controller.model.seat;
+package vn.com.routex.hub.payment.service.interfaces.models.seat;
 
 public interface RouteSeatView {
     String getRouteId();
