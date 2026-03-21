@@ -2,7 +2,7 @@ package vn.com.routex.hub.payment.service.infrastructure.persistence.utils;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.experimental.UtilityClass;
-import vn.com.routex.hub.payment.service.controller.model.base.BaseRequest;
+import vn.com.routex.hub.payment.service.interfaces.models.base.BaseRequest;
 import vn.com.routex.hub.payment.service.infrastructure.persistence.config.RequestAttributes;
 
 @UtilityClass

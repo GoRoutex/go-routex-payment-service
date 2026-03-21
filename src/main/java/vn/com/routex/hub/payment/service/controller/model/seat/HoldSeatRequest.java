@@ -1,4 +1,4 @@
-package vn.com.routex.hub.payment.service.controller.model.seat;
+package vn.com.routex.hub.payment.service.interfaces.models.seat;
 
 
 import jakarta.validation.Valid;
@@ -10,7 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import vn.com.routex.hub.payment.service.controller.model.base.BaseRequest;
+import vn.com.routex.hub.payment.service.interfaces.models.base.BaseRequest;
 
 import java.util.List;
 

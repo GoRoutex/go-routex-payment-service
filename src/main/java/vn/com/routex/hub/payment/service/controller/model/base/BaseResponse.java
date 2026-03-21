@@ -1,4 +1,4 @@
-package vn.com.routex.hub.payment.service.controller.model.base;
+package vn.com.routex.hub.payment.service.interfaces.models.base;
 
 
 import lombok.AllArgsConstructor;
@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import vn.com.routex.hub.payment.service.controller.model.result.ApiResult;
+import vn.com.routex.hub.payment.service.interfaces.models.result.ApiResult;
 
 @Getter
 @Setter

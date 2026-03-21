@@ -1,4 +1,4 @@
-package vn.com.routex.hub.payment.service.controller.model.result;
+package vn.com.routex.hub.payment.service.interfaces.models.result;
 
 
 import lombok.AllArgsConstructor;

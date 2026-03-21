@@ -1,4 +1,4 @@
-package vn.com.routex.hub.payment.service.controller.model.base;
+package vn.com.routex.hub.payment.service.interfaces.models.base;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -38,4 +38,3 @@ public class BaseRequest {
     @Pattern(regexp = CHANNEL_REGREX, message = "Channel must be ONL, OFF")
     private String channel;
 }
-
