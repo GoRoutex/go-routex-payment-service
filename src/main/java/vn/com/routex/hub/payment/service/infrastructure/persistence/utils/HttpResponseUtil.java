@@ -3,9 +3,9 @@ package vn.com.routex.hub.payment.service.infrastructure.persistence.utils;
 import lombok.experimental.UtilityClass;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import vn.com.routex.hub.payment.service.interfaces.models.base.BaseRequest;
-import vn.com.routex.hub.payment.service.interfaces.models.base.BaseResponse;
 import vn.com.routex.hub.payment.service.infrastructure.persistence.exception.BusinessException;
+import vn.com.routex.hub.payment.service.interfaces.model.base.BaseRequest;
+import vn.com.routex.hub.payment.service.interfaces.model.base.BaseResponse;
 
 import static vn.com.routex.hub.payment.service.infrastructure.persistence.constant.ErrorConstant.TIMEOUT_ERROR;
 import static vn.com.routex.hub.payment.service.infrastructure.persistence.constant.ErrorConstant.TIMEOUT_ERROR_MESSAGE;

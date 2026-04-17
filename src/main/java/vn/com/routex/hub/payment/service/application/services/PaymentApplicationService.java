@@ -1,9 +1,9 @@
 package vn.com.routex.hub.payment.service.application.services;
 
-import vn.com.routex.hub.payment.service.application.dto.payment.CheckoutCommand;
-import vn.com.routex.hub.payment.service.application.dto.payment.CheckoutResult;
-import vn.com.routex.hub.payment.service.application.dto.payment.CreatePaymentSessionCommand;
-import vn.com.routex.hub.payment.service.application.dto.payment.CreatePaymentSessionResult;
+import vn.com.routex.hub.payment.service.application.command.payment.CheckoutCommand;
+import vn.com.routex.hub.payment.service.application.command.payment.CheckoutResult;
+import vn.com.routex.hub.payment.service.application.command.payment.CreatePaymentSessionCommand;
+import vn.com.routex.hub.payment.service.application.command.payment.CreatePaymentSessionResult;
 
 public interface PaymentApplicationService {
 
