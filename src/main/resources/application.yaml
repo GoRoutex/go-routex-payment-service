@@ -102,7 +102,7 @@ jms:
   max-message: ${JMS_MAX_MESSAGE:1}
 
 server:
-  port: ${SERVER_PORT:8002}
+  port: ${SERVER_PORT:8086}
 
 identity:
   jwt:

@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import vn.com.routex.hub.payment.service.interfaces.models.seat.RouteSeatView;
+import vn.com.routex.hub.payment.service.interfaces.model.seat.RouteSeatView;
 
 import java.util.List;
 

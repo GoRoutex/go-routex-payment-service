@@ -10,8 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.ContentCachingResponseWrapper;
-import vn.com.routex.hub.payment.service.interfaces.models.base.BaseRequest;
 import vn.com.routex.hub.payment.service.infrastructure.persistence.config.RequestAttributes;
+import vn.com.routex.hub.payment.service.interfaces.model.base.BaseRequest;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

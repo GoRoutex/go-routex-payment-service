@@ -1,6 +1,6 @@
 package vn.com.routex.hub.payment.service.domain.payment.port;
 
-import vn.com.routex.hub.payment.service.application.dto.payment.RequestMetadata;
+import vn.com.routex.hub.payment.service.application.command.payment.RequestMetadata;
 import vn.com.routex.hub.payment.service.domain.payment.model.PaymentAggregate;
 
 public interface PaymentEventPublisherPort {

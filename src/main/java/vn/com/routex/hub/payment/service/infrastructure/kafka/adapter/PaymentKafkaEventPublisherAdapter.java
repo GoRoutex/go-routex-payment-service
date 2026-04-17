@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
-import vn.com.routex.hub.payment.service.application.dto.payment.RequestMetadata;
+import vn.com.routex.hub.payment.service.application.command.payment.RequestMetadata;
 import vn.com.routex.hub.payment.service.domain.payment.model.PaymentAggregate;
 import vn.com.routex.hub.payment.service.domain.payment.port.PaymentEventPublisherPort;
 import vn.com.routex.hub.payment.service.infrastructure.kafka.event.PaymentFailedEvent;

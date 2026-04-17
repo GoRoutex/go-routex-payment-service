@@ -15,10 +15,10 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
-import vn.com.routex.hub.payment.service.interfaces.models.base.BaseRequest;
-import vn.com.routex.hub.payment.service.interfaces.models.base.BaseResponse;
-import vn.com.routex.hub.payment.service.interfaces.models.result.ApiResult;
 import vn.com.routex.hub.payment.service.infrastructure.persistence.utils.ApiRequestUtils;
+import vn.com.routex.hub.payment.service.interfaces.model.base.BaseRequest;
+import vn.com.routex.hub.payment.service.interfaces.model.base.BaseResponse;
+import vn.com.routex.hub.payment.service.interfaces.model.result.ApiResult;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -2,7 +2,7 @@ package vn.com.routex.hub.payment.service.infrastructure.persistence.utils;
 
 
 import lombok.experimental.UtilityClass;
-import vn.com.routex.hub.payment.service.interfaces.models.result.ApiResult;
+import vn.com.routex.hub.payment.service.interfaces.model.result.ApiResult;
 
 @UtilityClass
 public class ExceptionUtils {
