@@ -22,6 +22,11 @@ public class PaymentRepositoryAdapter implements PaymentRepositoryPort {
     }
 
     @Override
+    public Optional<PaymentAggregate> findByCode(String code) {
+        return paymentJpaRepository.findByCode(code).map(paymentPersistenceMapper::toDomain);
+    }
+
+    @Override
     public Optional<PaymentAggregate> findByBookingIdAndStatus(String bookingId, PaymentStatus status) {
         return paymentJpaRepository.findByBookingIdAndStatus(bookingId, status)
                 .map(paymentPersistenceMapper::toDomain);

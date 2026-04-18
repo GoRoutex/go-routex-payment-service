@@ -8,6 +8,8 @@ import java.util.Optional;
 public interface PaymentRepositoryPort {
     Optional<PaymentAggregate> findById(String paymentId);
 
+    Optional<PaymentAggregate> findByCode(String code);
+
     Optional<PaymentAggregate> findByBookingIdAndStatus(String bookingId, PaymentStatus status);
 
     PaymentAggregate save(PaymentAggregate paymentAggregate);
