@@ -57,9 +57,6 @@ public class User extends AbstractAuditingEntity {
     @Column(nullable = false)
     private UserStatus status;
 
-    @Column(name = "TENANT_ID")
-    private String tenantId;
-
     @Column(name = "LANGUAGE", nullable = false)
     private String language;
 
