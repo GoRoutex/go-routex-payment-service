@@ -1,6 +1,7 @@
 package vn.com.routex.hub.payment.service.interfaces.controller;
 
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -14,15 +15,13 @@ import vn.com.routex.hub.payment.service.application.command.payment.CheckoutCom
 import vn.com.routex.hub.payment.service.application.command.payment.CheckoutResult;
 import vn.com.routex.hub.payment.service.application.command.payment.CreatePaymentSessionCommand;
 import vn.com.routex.hub.payment.service.application.command.payment.CreatePaymentSessionResult;
-import vn.com.routex.hub.payment.service.application.command.payment.RequestMetadata;
 import vn.com.routex.hub.payment.service.application.services.PaymentApplicationService;
-import vn.com.routex.hub.payment.service.infrastructure.persistence.utils.DateTimeUtils;
-import vn.com.routex.hub.payment.service.infrastructure.persistence.utils.HttpResponseUtil;
+import vn.com.routex.hub.payment.service.infrastructure.persistence.utils.ApiRequestUtils;
+import vn.com.routex.hub.payment.service.infrastructure.persistence.utils.HttpUtils;
+import vn.com.routex.hub.payment.service.interfaces.model.base.BaseRequest;
 import vn.com.routex.hub.payment.service.interfaces.model.payment.CheckoutResponse;
 import vn.com.routex.hub.payment.service.interfaces.model.payment.CreatePaymentSessionRequest;
 import vn.com.routex.hub.payment.service.interfaces.model.payment.CreatePaymentSessionResponse;
-
-import java.util.UUID;
 
 import static vn.com.routex.hub.payment.service.infrastructure.persistence.constant.ApiConstant.API_PATH;
 import static vn.com.routex.hub.payment.service.infrastructure.persistence.constant.ApiConstant.API_VERSION;
@@ -41,39 +40,39 @@ public class InternalPaymentController {
     public ResponseEntity<CreatePaymentSessionResponse> createPaymentSession(@Valid @RequestBody CreatePaymentSessionRequest createPaymentSessionRequest) {
         CreatePaymentSessionResult result = paymentApplicationService.createPaymentSession(
                 CreatePaymentSessionCommand.builder()
-                        .metadata(toMetadata(createPaymentSessionRequest))
+                        .context(HttpUtils.toContext(createPaymentSessionRequest))
                         .bookingId(createPaymentSessionRequest.getData().getBookingId())
                         .customerId(createPaymentSessionRequest.getData().getCustomerId())
                         .build()
         );
-        return HttpResponseUtil.buildResponse(createPaymentSessionRequest, toCreatePaymentSessionResponse(result));
+        return HttpUtils.buildResponse(createPaymentSessionRequest, toCreatePaymentSessionResponse(result));
     }
 
     @GetMapping(CHECKOUT_PATH)
     public ResponseEntity<CheckoutResponse> checkout(
             @RequestParam String paymentId,
-            @RequestParam String token) {
-        CreatePaymentSessionRequest request = CreatePaymentSessionRequest.builder()
-                .requestId(UUID.randomUUID().toString())
-                .requestDateTime(DateTimeUtils.now())
-                .channel("ONL")
-                .build();
+            @RequestParam String token,
+            HttpServletRequest request) {
+        BaseRequest baseRequest = ApiRequestUtils.getBaseRequestOrDefault(request);
         CheckoutResult result = paymentApplicationService.checkout(
                 CheckoutCommand.builder()
-                        .metadata(toMetadata(request))
+                        .context(HttpUtils.toContext(baseRequest))
                         .paymentId(paymentId)
                         .token(token)
                         .build()
         );
-        return HttpResponseUtil.buildResponse(request, toCheckoutResponse(result));
-    }
 
-    private RequestMetadata toMetadata(CreatePaymentSessionRequest request) {
-        return RequestMetadata.builder()
-                .requestId(request.getRequestId())
-                .requestDateTime(request.getRequestDateTime())
-                .channel(request.getChannel())
+        CheckoutResponse response = CheckoutResponse.builder()
+                .result(result.result())
+                .data(CheckoutResponse.CheckoutResponseData.builder()
+                        .paymentId(result.paymentId())
+                        .status(result.status())
+                        .amount(result.amount())
+                        .currency(result.currency())
+                        .paidAt(result.paidAt())
+                        .build())
                 .build();
+        return HttpUtils.buildResponse(baseRequest, response);
     }
 
     private CreatePaymentSessionResponse toCreatePaymentSessionResponse(CreatePaymentSessionResult result) {
@@ -88,19 +87,6 @@ public class InternalPaymentController {
                         .qrContent(result.qrContent())
                         .checkoutUrl(result.checkoutUrl())
                         .expiresAt(result.expiresAt())
-                        .build())
-                .build();
-    }
-
-    private CheckoutResponse toCheckoutResponse(CheckoutResult result) {
-        return CheckoutResponse.builder()
-                .result(result.result())
-                .data(CheckoutResponse.CheckoutResponseData.builder()
-                        .paymentId(result.paymentId())
-                        .status(result.status())
-                        .amount(result.amount())
-                        .currency(result.currency())
-                        .paidAt(result.paidAt())
                         .build())
                 .build();
     }

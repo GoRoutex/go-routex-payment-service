@@ -3,7 +3,7 @@ package vn.com.routex.hub.payment.service.application.services.impl;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import vn.com.routex.hub.payment.service.application.command.payment.RequestMetadata;
+import vn.com.routex.hub.payment.service.application.command.common.RequestContext;
 import vn.com.routex.hub.payment.service.application.services.VNPayService;
 import vn.com.routex.hub.payment.service.domain.booking.PaymentStatus;
 import vn.com.routex.hub.payment.service.domain.payment.model.PaymentAggregate;
@@ -204,9 +204,9 @@ public class VNPayServiceImpl implements VNPayService {
         }
     }
 
-    private RequestMetadata buildMetadata() {
+    private RequestContext buildMetadata() {
         String now = OffsetDateTime.now().toString();
-        return RequestMetadata.builder()
+        return RequestContext.builder()
                 .requestId("vnpay-ipn")
                 .requestDateTime(now)
                 .channel("VNPAY")

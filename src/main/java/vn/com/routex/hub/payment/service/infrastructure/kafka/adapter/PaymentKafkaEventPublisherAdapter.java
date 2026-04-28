@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
-import vn.com.routex.hub.payment.service.application.command.payment.RequestMetadata;
+import vn.com.routex.hub.payment.service.application.command.common.RequestContext;
 import vn.com.routex.hub.payment.service.domain.payment.model.PaymentAggregate;
 import vn.com.routex.hub.payment.service.domain.payment.port.PaymentEventPublisherPort;
 import vn.com.routex.hub.payment.service.infrastructure.kafka.event.PaymentFailedEvent;
@@ -34,7 +34,7 @@ public class PaymentKafkaEventPublisherAdapter implements PaymentEventPublisherP
     private String paymentFailedEvent;
 
     @Override
-    public void publishPaymentSucceeded(RequestMetadata metadata, PaymentAggregate paymentAggregate) {
+    public void publishPaymentSucceeded(RequestContext metadata, PaymentAggregate paymentAggregate) {
         PaymentSuccessEvent payload = PaymentSuccessEvent.builder()
                 .paymentId(paymentAggregate.getId())
                 .bookingId(paymentAggregate.getBookingId())
@@ -47,7 +47,7 @@ public class PaymentKafkaEventPublisherAdapter implements PaymentEventPublisherP
     }
 
     @Override
-    public void publishPaymentFailed(RequestMetadata metadata, PaymentAggregate paymentAggregate, String reason) {
+    public void publishPaymentFailed(RequestContext metadata, PaymentAggregate paymentAggregate, String reason) {
         PaymentFailedEvent payload = PaymentFailedEvent.builder()
                 .paymentId(paymentAggregate.getId())
                 .bookingId(paymentAggregate.getBookingId())
@@ -58,7 +58,7 @@ public class PaymentKafkaEventPublisherAdapter implements PaymentEventPublisherP
     }
 
     private void publish(
-            RequestMetadata metadata,
+            RequestContext metadata,
             String topicName,
             String eventName,
             String aggregateId,

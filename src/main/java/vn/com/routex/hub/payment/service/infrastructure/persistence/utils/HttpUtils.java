@@ -3,6 +3,7 @@ package vn.com.routex.hub.payment.service.infrastructure.persistence.utils;
 import lombok.experimental.UtilityClass;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import vn.com.routex.hub.payment.service.application.command.common.RequestContext;
 import vn.com.routex.hub.payment.service.infrastructure.persistence.exception.BusinessException;
 import vn.com.routex.hub.payment.service.interfaces.model.base.BaseRequest;
 import vn.com.routex.hub.payment.service.interfaces.model.base.BaseResponse;
@@ -10,8 +11,22 @@ import vn.com.routex.hub.payment.service.interfaces.model.base.BaseResponse;
 import static vn.com.routex.hub.payment.service.infrastructure.persistence.constant.ErrorConstant.TIMEOUT_ERROR;
 import static vn.com.routex.hub.payment.service.infrastructure.persistence.constant.ErrorConstant.TIMEOUT_ERROR_MESSAGE;
 
+
 @UtilityClass
-public class HttpResponseUtil {
+public class HttpUtils {
+
+    public RequestContext toContext(BaseRequest request) {
+        return toContext(request, null);
+    }
+
+    public RequestContext toContext(BaseRequest request, String merchantId) {
+        return RequestContext.builder()
+                .requestId(request.getRequestId())
+                .requestDateTime(request.getRequestDateTime())
+                .channel(request.getChannel())
+                .merchantId(merchantId)
+                .build();
+    }
 
     public <T, R extends BaseResponse<T>> ResponseEntity<R> buildResponse(BaseRequest request, R response) {
         if (response == null) {
@@ -19,8 +34,7 @@ public class HttpResponseUtil {
                     request.getRequestId(),
                     request.getRequestDateTime(),
                     request.getChannel(),
-                    ExceptionUtils.buildResultResponse(
-                            TIMEOUT_ERROR, TIMEOUT_ERROR_MESSAGE)
+                    ExceptionUtils.buildResultResponse(TIMEOUT_ERROR, TIMEOUT_ERROR_MESSAGE)
             );
         }
 

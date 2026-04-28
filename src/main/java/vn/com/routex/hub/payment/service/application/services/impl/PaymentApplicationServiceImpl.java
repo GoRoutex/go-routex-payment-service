@@ -99,7 +99,7 @@ public class PaymentApplicationServiceImpl implements PaymentApplicationService 
 
             paymentAggregate.markPaid(OffsetDateTime.now());
             PaymentAggregate savedPayment = paymentRepositoryPort.save(paymentAggregate);
-            paymentEventPublisherPort.publishPaymentSucceeded(command.metadata(), savedPayment);
+            paymentEventPublisherPort.publishPaymentSucceeded(command.context(), savedPayment);
 
             return CheckoutResult.builder()
                     .result(successResult())
@@ -112,7 +112,7 @@ public class PaymentApplicationServiceImpl implements PaymentApplicationService 
         } catch (Exception ex) {
             paymentAggregate.markFailed(OffsetDateTime.now(), ex.getMessage());
             PaymentAggregate failedPayment = paymentRepositoryPort.save(paymentAggregate);
-            paymentEventPublisherPort.publishPaymentFailed(command.metadata(), failedPayment, ex.getMessage());
+            paymentEventPublisherPort.publishPaymentFailed(command.context(), failedPayment, ex.getMessage());
             throw businessException(command, PROCESS_FAIL_ERROR, "Payment failed");
         }
     }
@@ -140,18 +140,18 @@ public class PaymentApplicationServiceImpl implements PaymentApplicationService 
 
     private BusinessException businessException(CreatePaymentSessionCommand command, String responseCode, String description) {
         return new BusinessException(
-                command.metadata().requestId(),
-                command.metadata().requestDateTime(),
-                command.metadata().channel(),
+                command.context().requestId(),
+                command.context().requestDateTime(),
+                command.context().channel(),
                 ExceptionUtils.buildResultResponse(responseCode, description)
         );
     }
 
     private BusinessException businessException(CheckoutCommand command, String responseCode, String description) {
         return new BusinessException(
-                command.metadata().requestId(),
-                command.metadata().requestDateTime(),
-                command.metadata().channel(),
+                command.context().requestId(),
+                command.context().requestDateTime(),
+                command.context().channel(),
                 ExceptionUtils.buildResultResponse(responseCode, description)
         );
     }
