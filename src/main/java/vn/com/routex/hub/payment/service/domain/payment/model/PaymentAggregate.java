@@ -22,19 +22,17 @@ public class PaymentAggregate extends AbstractAuditingEntity {
     private String id;
     private String bookingCode;
     private PaymentMethod method;
+    private String txnRef;
     private BigDecimal amount;
     private String currency;
     private PaymentStatus status;
-    private String checkoutUrl;
-    private String paymentToken;
     private OffsetDateTime paidAt;
-    private OffsetDateTime expiredAt;
     private OffsetDateTime failedAt;
     private String failureReason;
     private String description;
 
     public boolean isReusablePendingPayment(OffsetDateTime now) {
-        return PaymentStatus.PENDING.equals(status) && expiredAt != null && !expiredAt.isBefore(now);
+        return PaymentStatus.PENDING.equals(status);
     }
 
     public void markPaid(OffsetDateTime now) {

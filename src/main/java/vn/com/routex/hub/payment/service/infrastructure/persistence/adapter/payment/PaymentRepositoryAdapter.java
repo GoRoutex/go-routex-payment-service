@@ -34,4 +34,10 @@ public class PaymentRepositoryAdapter implements PaymentRepositoryPort {
                 paymentEntityRepository.save(paymentPersistenceMapper.toJpaEntity(paymentAggregate))
         );
     }
+
+    @Override
+    public Optional<PaymentAggregate> findByTxnRef(String txnRef) {
+        return paymentEntityRepository.findByTxnRef(txnRef)
+                .map(paymentPersistenceMapper::toDomain);
+    }
 }

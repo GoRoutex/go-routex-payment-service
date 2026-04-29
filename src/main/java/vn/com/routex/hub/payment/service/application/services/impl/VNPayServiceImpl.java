@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import vn.com.routex.hub.payment.service.application.command.common.RequestContext;
+import vn.com.routex.hub.payment.service.application.command.payment.GetPaymentUrlCommand;
 import vn.com.routex.hub.payment.service.application.services.VNPayService;
 import vn.com.routex.hub.payment.service.domain.booking.PaymentStatus;
 import vn.com.routex.hub.payment.service.domain.payment.model.PaymentAggregate;
@@ -11,7 +12,6 @@ import vn.com.routex.hub.payment.service.domain.payment.port.PaymentEventPublish
 import vn.com.routex.hub.payment.service.domain.payment.port.PaymentRepositoryPort;
 import vn.com.routex.hub.payment.service.infrastructure.integration.constant.VNPayConstant;
 import vn.com.routex.hub.payment.service.infrastructure.integration.utils.VNPayUtils;
-import vn.com.routex.hub.payment.service.interfaces.model.vnpay.PaymentRequest;
 import vn.com.routex.hub.payment.service.interfaces.model.vnpay.VNPayIpnResponse;
 
 import java.io.UnsupportedEncodingException;
@@ -29,6 +29,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.UUID;
 
 
 @RequiredArgsConstructor
@@ -40,18 +41,14 @@ public class VNPayServiceImpl implements VNPayService {
     private final PaymentEventPublisherPort paymentEventPublisherPort;
 
     @Override
-    public String createPaymentUrl(PaymentRequest request, HttpServletRequest servletRequest) throws UnsupportedEncodingException {
+    public String createPaymentUrl(GetPaymentUrlCommand request, String txnRef) throws UnsupportedEncodingException {
         String vnp_Version = "2.1.0";
         String vnp_Command = "pay";
         String orderType = "other";
-        BigDecimal amount = request.getData().getAmount().multiply(BigDecimal.valueOf(100));
+        BigDecimal amount = request.amount().multiply(BigDecimal.valueOf(100));
 
-        String bankCode = request.getData().getBankCode();
-
-        String vnp_TxnRef = hasText(request.getData().getReferenceNo())
-                ? request.getData().getReferenceNo().trim()
-                : vnPayUtils.getRandomNumber(8);
-        String vnp_IpAddr = vnPayUtils.getIpAddress(servletRequest);
+        String bankCode = request.bankCode();
+        String vnp_IpAddr = hasText(request.clientIp()) ? request.clientIp().trim() : "127.0.0.1";
 
         String vnp_TmnCode = VNPayConstant.vnp_TMNCODE;
 
@@ -65,16 +62,11 @@ public class VNPayServiceImpl implements VNPayService {
         if (bankCode != null && !bankCode.isEmpty()) {
             vnp_Params.put("vnp_BankCode", bankCode);
         }
-        vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
-        vnp_Params.put("vnp_OrderInfo", "Thanh toan don hang:" + vnp_TxnRef);
-        vnp_Params.put("vnp_OrderType", orderType);
 
-        String locate = request.getData().getLanguage();
-        if (locate != null && !locate.isEmpty()) {
-            vnp_Params.put("vnp_Locale", locate);
-        } else {
-            vnp_Params.put("vnp_Locale", "vn");
-        }
+        vnp_Params.put("vnp_TxnRef", txnRef);
+        vnp_Params.put("vnp_OrderInfo", "Thanh toan don hang:" + request.bookingCode());
+        vnp_Params.put("vnp_OrderType", orderType);
+        vnp_Params.put("vnp_Locale", "vn");
         vnp_Params.put("vnp_ReturnUrl", VNPayConstant.vnp_RETURNURL);
         vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
 
@@ -138,7 +130,9 @@ public class VNPayServiceImpl implements VNPayService {
                 return ipnResponse("01", "Order not Found");
             }
 
-            PaymentAggregate payment = findPayment(txnRef.trim());
+            PaymentAggregate payment = paymentRepositoryPort.findByTxnRef(txnRef)
+                    .orElse(null);
+
             if (payment == null) {
                 return ipnResponse("01", "Order not Found");
             }
@@ -146,12 +140,14 @@ public class VNPayServiceImpl implements VNPayService {
             if (!isValidAmount(payment, servletRequest.getParameter("vnp_Amount"))) {
                 return ipnResponse("04", "Invalid Amount");
             }
-
+            String responseCode = servletRequest.getParameter("vnp_ResponseCode");
+            if (PaymentStatus.PAID.equals(payment.getStatus()) && "00".equals(responseCode)) {
+                return ipnResponse("00", "Confirm Success");
+            }
             if (!PaymentStatus.PENDING.equals(payment.getStatus())) {
                 return ipnResponse("02", "Order already confirmed");
             }
 
-            String responseCode = servletRequest.getParameter("vnp_ResponseCode");
             if ("00".equals(responseCode)) {
                 payment.markPaid(OffsetDateTime.now());
                 PaymentAggregate savedPayment = paymentRepositoryPort.save(payment);
@@ -184,13 +180,6 @@ public class VNPayServiceImpl implements VNPayService {
         }
         return fields;
     }
-
-    private PaymentAggregate findPayment(String txnRef) {
-        return paymentRepositoryPort.findById(txnRef)
-                .or(() -> paymentRepositoryPort.findById(txnRef))
-                .orElse(null);
-    }
-
     private boolean isValidAmount(PaymentAggregate payment, String amountParam) {
         if (!hasText(amountParam)) {
             return false;

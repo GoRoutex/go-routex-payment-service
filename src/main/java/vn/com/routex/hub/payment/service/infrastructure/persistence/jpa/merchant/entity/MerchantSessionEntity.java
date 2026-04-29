@@ -40,7 +40,7 @@ public class MerchantSessionEntity extends AbstractAuditingEntity {
     @Column(name = "MERCHANT_TXN_REF")
     private String merchantTxnRef;
 
-    @Column(name = "CHECKOUT_URL")
+    @Column(name = "CHECKOUT_URL", length = 5000)
     private String checkoutUrl;
 
     @Column(name = "DEEP_LINK")

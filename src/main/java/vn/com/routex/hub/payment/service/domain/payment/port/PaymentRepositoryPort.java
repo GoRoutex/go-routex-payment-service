@@ -4,6 +4,7 @@ import vn.com.routex.hub.payment.service.domain.booking.PaymentStatus;
 import vn.com.routex.hub.payment.service.domain.payment.PaymentMethod;
 import vn.com.routex.hub.payment.service.domain.payment.model.PaymentAggregate;
 
+import java.math.BigInteger;
 import java.util.Optional;
 
 public interface PaymentRepositoryPort {
@@ -12,4 +13,6 @@ public interface PaymentRepositoryPort {
     Optional<PaymentAggregate> findByBookingCodeAndMethodAndStatus(String bookingCode, PaymentMethod method, PaymentStatus status);
 
     PaymentAggregate save(PaymentAggregate paymentAggregate);
+
+    Optional<PaymentAggregate> findByTxnRef(String txnRef);
 }

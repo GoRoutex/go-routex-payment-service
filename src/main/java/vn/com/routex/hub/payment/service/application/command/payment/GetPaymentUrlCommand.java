@@ -9,6 +9,10 @@ import java.math.BigDecimal;
 @Builder
 public record GetPaymentUrlCommand(
         RequestContext context,
+        BigDecimal amount,
+        String referenceNo,
+        String bankCode,
+        String clientIp,
         String bookingCode,
         PaymentMethod method
 ) {

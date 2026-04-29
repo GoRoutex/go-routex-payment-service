@@ -47,17 +47,11 @@ public class PaymentEntity extends AbstractAuditingEntity {
     @Column(name = "STATUS")
     private PaymentStatus status;
 
-    @Column(name = "CHECKOUT_URL")
-    private String checkoutUrl;
-
-    @Column(name = "PAYMENT_TOKEN")
-    private String paymentToken;
+    @Column(name = "TXN_REF", unique = true)
+    private String txnRef;
 
     @Column(name = "PAID_AT")
     private OffsetDateTime paidAt;
-
-    @Column(name = "EXPIRED_AT")
-    private OffsetDateTime expiredAt;
 
     @Column(name = "FAILED_AT")
     private OffsetDateTime failedAt;

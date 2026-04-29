@@ -1,10 +1,11 @@
 package vn.com.routex.hub.payment.service.application.services.merchant.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import vn.com.go.routex.identity.security.log.SystemLog;
 import vn.com.routex.hub.payment.service.application.command.payment.GetPaymentUrlCommand;
 import vn.com.routex.hub.payment.service.application.command.payment.GetPaymentUrlResult;
+import vn.com.routex.hub.payment.service.application.services.VNPayService;
 import vn.com.routex.hub.payment.service.application.services.merchant.PaymentMerchantService;
 import vn.com.routex.hub.payment.service.domain.booking.BookingStatus;
 import vn.com.routex.hub.payment.service.domain.booking.PaymentStatus;
@@ -36,9 +37,10 @@ public class ShopeePayMerchantServiceImpl implements PaymentMerchantService {
     private final QrCodeGeneratorPort qrCodeGeneratorPort;
     private final PaymentRepositoryPort paymentRepositoryPort;
     private final MerchantSessionRepositoryPort merchantSessionRepositoryPort;
+    private final VNPayService vnPayService;
 
-    @Value("${app.payment.checkout-url}")
-    private String checkoutBaseUrl;
+
+    private final SystemLog sLog = SystemLog.getLogger(this.getClass());
 
     @Override
     public PaymentMethod getPaymentMethod() {
@@ -59,11 +61,20 @@ public class ShopeePayMerchantServiceImpl implements PaymentMerchantService {
             throw new BusinessException(command.context().requestId(), command.context().requestDateTime(), command.context().channel(),
                     ExceptionUtils.buildResultResponse(INVALID_DATA_ERROR, "Booking Session is expired"));
         }
+
+
+        if (command.amount().compareTo(bookingAggregate.getTotalAmount()) != 0) {
+            throw new BusinessException(command.context().requestId(), command.context().requestDateTime(), command.context().channel(),
+                    ExceptionUtils.buildResultResponse(INVALID_DATA_ERROR, "Payment amount does not match booking total amount"));
+        }
         OffsetDateTime now = OffsetDateTime.now();
         PaymentAggregate payment = getOrCreatePendingPayment(command, bookingAggregate, now);
-        MerchantSessionAggregate session = getOrCreateReusableMerchantSession(command, payment, bookingAggregate, now);
+
+        sLog.info("Payment aggregate: {}", payment);
+        String checkoutUrl = buildCheckoutUrl(command, payment.getTxnRef());
+        MerchantSessionAggregate session = getOrCreateReusableMerchantSession(command, payment, bookingAggregate, checkoutUrl, now);
         String qrCodeUrl = qrCodeGeneratorPort.generateBase64Png(
-                session.getCheckoutUrl(),
+                checkoutUrl,
                 300,
                 300
         );
@@ -72,35 +83,38 @@ public class ShopeePayMerchantServiceImpl implements PaymentMerchantService {
                 .amount(payment.getAmount())
                 .method(command.method())
                 .qrCodeUrl(qrCodeUrl)
-                .paymentUrl(session.getCheckoutUrl())
+                .paymentUrl(checkoutUrl)
                 .deeplink(session.getDeeplink())
                 .expiredTime(session.getExpiredAt())
                 .build();
+    }
+
+    private String buildCheckoutUrl(GetPaymentUrlCommand command, String txnRef) {
+        try {
+            return vnPayService.createPaymentUrl(command, txnRef);
+        } catch (Exception ex) {
+            throw new IllegalStateException("Failed to create VNPay checkout url", ex);
+        }
     }
 
     private MerchantSessionAggregate getOrCreateReusableMerchantSession(
             GetPaymentUrlCommand command,
             PaymentAggregate aggregate,
             Booking booking,
+            String checkoutUrl,
             OffsetDateTime now
     ) {
         return merchantSessionRepositoryPort.findLatestByPaymentIdAndStatus(aggregate.getId(), MerchantSessionStatus.CREATED)
                 .filter(session -> session.isReusable(now))
                 .orElseGet(() -> {
                     int nextAttemptNo = merchantSessionRepositoryPort.countByPaymentId(aggregate.getId()) + 1;
-                    String sessionId = UUID.randomUUID().toString();
-                    String token = UUID.randomUUID().toString();
-                    String checkoutUrl = checkoutBaseUrl
-                            + "?paymentId=" + aggregate.getId()
-                            + "&sessionId=" + sessionId
-                            + "&token=" + token;
                     MerchantSessionAggregate session = MerchantSessionAggregate.builder()
-                            .id(sessionId)
+                            .id(UUID.randomUUID().toString())
                             .paymentId(aggregate.getId())
                             .paymentMerchant(command.method())
                             .status(MerchantSessionStatus.CREATED)
                             .attemptNo(nextAttemptNo)
-                            .merchantTxnRef(sessionId)
+                            .merchantTxnRef(aggregate.getId())
                             .checkoutUrl(checkoutUrl)
                             .deeplink("")
                             .expiredAt(booking.getHoldUntil())
@@ -128,11 +142,13 @@ public class ShopeePayMerchantServiceImpl implements PaymentMerchantService {
                             .bookingCode(command.bookingCode())
                             .method(command.method())
                             .amount(booking.getTotalAmount())
+                            .txnRef(UUID.randomUUID().toString())
                             .currency(booking.getCurrency())
                             .status(PaymentStatus.PENDING)
-                            .expiredAt(booking.getHoldUntil())
                             .createdAt(now)
                             .build();
+
+                    sLog.info("paymnet at saving: {}", payment);
 
                     return paymentRepositoryPort.save(payment);
                 });
