@@ -1,31 +1,85 @@
 package vn.com.routex.hub.payment.service.infrastructure.persistence.adapter.booking;
 
 import org.springframework.stereotype.Component;
-import vn.com.routex.hub.payment.service.domain.booking.model.BookingAggregate;
-import vn.com.routex.hub.payment.service.infrastructure.persistence.jpa.booking.entity.BookingJpaEntity;
+import vn.com.routex.hub.payment.service.domain.booking.model.Booking;
+import vn.com.routex.hub.payment.service.domain.booking.model.BookingSeat;
+import vn.com.routex.hub.payment.service.infrastructure.persistence.jpa.booking.entity.BookingEntity;
+import vn.com.routex.hub.payment.service.infrastructure.persistence.jpa.booking.entity.BookingSeatEntity;
 
 @Component
 public class BookingPersistenceMapper {
 
-    public BookingAggregate toDomain(BookingJpaEntity bookingJpaEntity) {
-        return BookingAggregate.builder()
-                .id(bookingJpaEntity.getId())
-                .bookingCode(bookingJpaEntity.getBookingCode())
-                .routeId(bookingJpaEntity.getRouteId())
-                .customerId(bookingJpaEntity.getCustomerId())
-                .seatCount(bookingJpaEntity.getSeatCount())
-                .totalAmount(bookingJpaEntity.getTotalAmount())
-                .currency(bookingJpaEntity.getCurrency())
-                .status(bookingJpaEntity.getStatus())
-                .heldAt(bookingJpaEntity.getHeldAt())
-                .holdUntil(bookingJpaEntity.getHoldUntil())
-                .cancelledAt(bookingJpaEntity.getCancelledAt())
-                .note(bookingJpaEntity.getNote())
-                .creator(bookingJpaEntity.getCreator())
-                .createdBy(bookingJpaEntity.getCreatedBy())
-                .createdAt(bookingJpaEntity.getCreatedAt())
-                .updatedBy(bookingJpaEntity.getUpdatedBy())
-                .updatedAt(bookingJpaEntity.getUpdatedAt())
+    public Booking toDomain(BookingEntity entity) {
+        return Booking.builder()
+                .id(entity.getId())
+                .bookingCode(entity.getBookingCode())
+                .routeId(entity.getRouteId())
+                .merchantId(entity.getMerchantId())
+                .vehicleId(entity.getVehicleId())
+                .customerId(entity.getCustomerId())
+                .customerName(entity.getCustomerName())
+                .customerPhone(entity.getCustomerPhone())
+                .customerEmail(entity.getCustomerEmail())
+                .channel(entity.getChannel())
+                .seatCount(entity.getSeatCount())
+                .totalAmount(entity.getTotalAmount())
+                .currency(entity.getCurrency())
+                .status(entity.getStatus())
+                .heldAt(entity.getHeldAt())
+                .holdUntil(entity.getHoldUntil())
+                .cancelledAt(entity.getCancelledAt())
+                .note(entity.getNote())
+                .creator(entity.getCreator())
+                .build();
+    }
+
+    public BookingEntity toEntity(Booking booking) {
+        return BookingEntity.builder()
+                .id(booking.getId())
+                .bookingCode(booking.getBookingCode())
+                .routeId(booking.getRouteId())
+                .merchantId(booking.getMerchantId())
+                .vehicleId(booking.getVehicleId())
+                .customerId(booking.getCustomerId())
+                .customerName(booking.getCustomerName())
+                .customerPhone(booking.getCustomerPhone())
+                .customerEmail(booking.getCustomerEmail())
+                .channel(booking.getChannel())
+                .seatCount(booking.getSeatCount())
+                .totalAmount(booking.getTotalAmount())
+                .currency(booking.getCurrency())
+                .status(booking.getStatus())
+                .heldAt(booking.getHeldAt())
+                .holdUntil(booking.getHoldUntil())
+                .cancelledAt(booking.getCancelledAt())
+                .note(booking.getNote())
+                .creator(booking.getCreator())
+                .build();
+    }
+
+    public BookingSeat toDomain(BookingSeatEntity entity) {
+        return BookingSeat.builder()
+                .id(entity.getId())
+                .bookingId(entity.getBookingId())
+                .routeId(entity.getRouteId())
+                .seatNo(entity.getSeatNo())
+                .price(entity.getPrice())
+                .status(entity.getStatus())
+                .ticketId(entity.getTicketId())
+                .creator(entity.getCreator())
+                .build();
+    }
+
+    public BookingSeatEntity toEntity(BookingSeat bookingSeat) {
+        return BookingSeatEntity.builder()
+                .id(bookingSeat.getId())
+                .bookingId(bookingSeat.getBookingId())
+                .routeId(bookingSeat.getRouteId())
+                .seatNo(bookingSeat.getSeatNo())
+                .price(bookingSeat.getPrice())
+                .status(bookingSeat.getStatus())
+                .ticketId(bookingSeat.getTicketId())
+                .creator(bookingSeat.getCreator())
                 .build();
     }
 }

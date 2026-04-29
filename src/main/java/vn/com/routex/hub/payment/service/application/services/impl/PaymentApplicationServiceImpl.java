@@ -8,8 +8,9 @@ import vn.com.routex.hub.payment.service.application.command.payment.CheckoutRes
 import vn.com.routex.hub.payment.service.application.command.payment.CreatePaymentSessionCommand;
 import vn.com.routex.hub.payment.service.application.command.payment.CreatePaymentSessionResult;
 import vn.com.routex.hub.payment.service.application.services.PaymentApplicationService;
+import vn.com.routex.hub.payment.service.domain.booking.BookingStatus;
 import vn.com.routex.hub.payment.service.domain.booking.PaymentStatus;
-import vn.com.routex.hub.payment.service.domain.booking.model.BookingAggregate;
+import vn.com.routex.hub.payment.service.domain.booking.model.Booking;
 import vn.com.routex.hub.payment.service.domain.booking.port.BookingRepositoryPort;
 import vn.com.routex.hub.payment.service.domain.payment.model.PaymentAggregate;
 import vn.com.routex.hub.payment.service.domain.payment.port.PaymentEventPublisherPort;
@@ -43,48 +44,48 @@ public class PaymentApplicationServiceImpl implements PaymentApplicationService 
 
     @Override
     public CreatePaymentSessionResult createPaymentSession(CreatePaymentSessionCommand command) {
-        BookingAggregate bookingAggregate = bookingRepositoryPort.findById(command.bookingId())
-                .orElseThrow(() -> businessException(command, RECORD_NOT_FOUND, BOOKING_RECORD_NOT_FOUND));
-
-        if (!bookingAggregate.isPendingPayment()) {
-            throw businessException(command, INVALID_DATA_ERROR, "Booking status is not HELD");
-        }
-        if (bookingAggregate.isHoldExpired(OffsetDateTime.now())) {
-            throw businessException(command, INVALID_DATA_ERROR, "Booking Session is expired");
-        }
-
-        PaymentAggregate existingPayment = paymentRepositoryPort
-                .findByBookingIdAndStatus(command.bookingId(), PaymentStatus.PENDING)
-                .orElse(null);
-
-        if (existingPayment != null && existingPayment.isReusablePendingPayment(OffsetDateTime.now())) {
-            return buildCreatePaymentSessionResult(
-                    qrCodeGeneratorPort.generateBase64Png(existingPayment.getCheckoutUrl(), 300, 300),
-                    existingPayment
-            );
-        }
-
-        String paymentId = UUID.randomUUID().toString();
-        String token = UUID.randomUUID().toString();
-        String checkoutUrl = checkoutBaseUrl + "?paymentId=" + paymentId + "&token=" + token;
-        PaymentAggregate paymentAggregate = PaymentAggregate.builder()
-                .id(paymentId)
-                .code("")
-                .bookingId(command.bookingId())
-                .amount(bookingAggregate.getTotalAmount())
-                .currency(bookingAggregate.getCurrency())
-                .status(PaymentStatus.PENDING)
-                .paymentToken(token)
-                .checkoutUrl(checkoutUrl)
-                .expiredAt(bookingAggregate.getHoldUntil())
-                .createdAt(OffsetDateTime.now())
-                .build();
-
-        PaymentAggregate savedPayment = paymentRepositoryPort.save(paymentAggregate);
-        return buildCreatePaymentSessionResult(
-                qrCodeGeneratorPort.generateBase64Png(savedPayment.getCheckoutUrl(), 300, 300),
-                savedPayment
-        );
+//        Booking bookingAggregate = bookingRepositoryPort.findById(command.bookingId())
+//                .orElseThrow(() -> businessException(command, RECORD_NOT_FOUND, BOOKING_RECORD_NOT_FOUND));
+//
+//        if (!BookingStatus.PENDING_PAYMENT.equals(bookingAggregate.getStatus())) {
+//            throw businessException(command, INVALID_DATA_ERROR, "Booking status is not HELD");
+//        }
+//        if (bookingAggregate.getHoldUntil().isBefore(OffsetDateTime.now())) {
+//            throw businessException(command, INVALID_DATA_ERROR, "Booking Session is expired");
+//        }
+//
+//        PaymentAggregate existingPayment = paymentRepositoryPort
+//                .findBy(command.bookingId(), PaymentStatus.PENDING)
+//                .orElse(null);
+//
+//        if (existingPayment != null && existingPayment.isReusablePendingPayment(OffsetDateTime.now())) {
+//            return buildCreatePaymentSessionResult(
+//                    qrCodeGeneratorPort.generateBase64Png(existingPayment.getCheckoutUrl(), 300, 300),
+//                    existingPayment
+//            );
+//        }
+//
+//        String paymentId = UUID.randomUUID().toString();
+//        String token = UUID.randomUUID().toString();
+//        String checkoutUrl = checkoutBaseUrl + "?paymentId=" + paymentId + "&token=" + token;
+//        PaymentAggregate paymentAggregate = PaymentAggregate.builder()
+//                .id(paymentId)
+//                .bookingCode(command.bookingId())
+//                .amount(bookingAggregate.getTotalAmount())
+//                .currency(bookingAggregate.getCurrency())
+//                .status(PaymentStatus.PENDING)
+//                .paymentToken(token)
+//                .checkoutUrl(checkoutUrl)
+//                .expiredAt(bookingAggregate.getHoldUntil())
+//                .createdAt(OffsetDateTime.now())
+//                .build();
+//
+//        PaymentAggregate savedPayment = paymentRepositoryPort.save(paymentAggregate);
+//        return buildCreatePaymentSessionResult(
+//                qrCodeGeneratorPort.generateBase64Png(savedPayment.getCheckoutUrl(), 300, 300),
+//                savedPayment
+//        );
+        return null;
     }
 
     @Override
@@ -121,7 +122,7 @@ public class PaymentApplicationServiceImpl implements PaymentApplicationService 
         return CreatePaymentSessionResult.builder()
                 .result(successResult())
                 .paymentId(paymentAggregate.getId())
-                .bookingId(paymentAggregate.getBookingId())
+                .bookingId(paymentAggregate.getBookingCode())
                 .amount(paymentAggregate.getAmount())
                 .currency(paymentAggregate.getCurrency())
                 .status(paymentAggregate.getStatus())

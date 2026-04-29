@@ -3,9 +3,10 @@ package vn.com.routex.hub.payment.service.infrastructure.persistence.adapter.pay
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import vn.com.routex.hub.payment.service.domain.booking.PaymentStatus;
+import vn.com.routex.hub.payment.service.domain.payment.PaymentMethod;
 import vn.com.routex.hub.payment.service.domain.payment.model.PaymentAggregate;
 import vn.com.routex.hub.payment.service.domain.payment.port.PaymentRepositoryPort;
-import vn.com.routex.hub.payment.service.infrastructure.persistence.jpa.payment.repository.PaymentJpaRepository;
+import vn.com.routex.hub.payment.service.infrastructure.persistence.jpa.payment.repository.PaymentEntityRepository;
 
 import java.util.Optional;
 
@@ -13,29 +14,24 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class PaymentRepositoryAdapter implements PaymentRepositoryPort {
 
-    private final PaymentJpaRepository paymentJpaRepository;
+    private final PaymentEntityRepository paymentEntityRepository;
     private final PaymentPersistenceMapper paymentPersistenceMapper;
 
     @Override
     public Optional<PaymentAggregate> findById(String paymentId) {
-        return paymentJpaRepository.findById(paymentId).map(paymentPersistenceMapper::toDomain);
+        return paymentEntityRepository.findById(paymentId).map(paymentPersistenceMapper::toDomain);
     }
 
     @Override
-    public Optional<PaymentAggregate> findByCode(String code) {
-        return paymentJpaRepository.findByCode(code).map(paymentPersistenceMapper::toDomain);
-    }
-
-    @Override
-    public Optional<PaymentAggregate> findByBookingIdAndStatus(String bookingId, PaymentStatus status) {
-        return paymentJpaRepository.findByBookingIdAndStatus(bookingId, status)
+    public Optional<PaymentAggregate> findByBookingCodeAndMethodAndStatus(String bookingId, PaymentMethod method, PaymentStatus status) {
+        return paymentEntityRepository.findByBookingCodeAndMethodAndStatus(bookingId, method, status)
                 .map(paymentPersistenceMapper::toDomain);
     }
 
     @Override
     public PaymentAggregate save(PaymentAggregate paymentAggregate) {
         return paymentPersistenceMapper.toDomain(
-                paymentJpaRepository.save(paymentPersistenceMapper.toJpaEntity(paymentAggregate))
+                paymentEntityRepository.save(paymentPersistenceMapper.toJpaEntity(paymentAggregate))
         );
     }
 }

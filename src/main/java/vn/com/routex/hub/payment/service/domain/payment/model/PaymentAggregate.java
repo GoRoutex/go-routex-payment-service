@@ -5,21 +5,23 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.SuperBuilder;
+import vn.com.routex.hub.payment.service.domain.auditing.AbstractAuditingEntity;
 import vn.com.routex.hub.payment.service.domain.booking.PaymentStatus;
+import vn.com.routex.hub.payment.service.domain.payment.PaymentMethod;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
 @Getter
 @Setter
-@Builder
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PaymentAggregate {
+public class PaymentAggregate extends AbstractAuditingEntity {
     private String id;
-    private String bookingId;
-    private String code;
-    private String method;
+    private String bookingCode;
+    private PaymentMethod method;
     private BigDecimal amount;
     private String currency;
     private PaymentStatus status;
@@ -30,10 +32,6 @@ public class PaymentAggregate {
     private OffsetDateTime failedAt;
     private String failureReason;
     private String description;
-    private String createdBy;
-    private OffsetDateTime createdAt;
-    private String updatedBy;
-    private OffsetDateTime updatedAt;
 
     public boolean isReusablePendingPayment(OffsetDateTime now) {
         return PaymentStatus.PENDING.equals(status) && expiredAt != null && !expiredAt.isBefore(now);
@@ -42,14 +40,14 @@ public class PaymentAggregate {
     public void markPaid(OffsetDateTime now) {
         paidAt = now;
         status = PaymentStatus.PAID;
-        updatedAt = now;
+        this.setUpdatedAt(now);
         failureReason = null;
     }
 
     public void markFailed(OffsetDateTime now, String reason) {
         status = PaymentStatus.FAILED;
         failedAt = now;
-        updatedAt = now;
+        this.setUpdatedAt(now);
         failureReason = reason;
     }
 }

@@ -187,7 +187,7 @@ public class VNPayServiceImpl implements VNPayService {
 
     private PaymentAggregate findPayment(String txnRef) {
         return paymentRepositoryPort.findById(txnRef)
-                .or(() -> paymentRepositoryPort.findByCode(txnRef))
+                .or(() -> paymentRepositoryPort.findById(txnRef))
                 .orElse(null);
     }
 

@@ -119,3 +119,6 @@ logging:
     org.apache.kafka: WARN
 
 
+app:
+  payment:
+    checkout-url: http://localhost:8080/api/v1/payment-service/checkout

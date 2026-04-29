@@ -37,7 +37,7 @@ public class PaymentKafkaEventPublisherAdapter implements PaymentEventPublisherP
     public void publishPaymentSucceeded(RequestContext metadata, PaymentAggregate paymentAggregate) {
         PaymentSuccessEvent payload = PaymentSuccessEvent.builder()
                 .paymentId(paymentAggregate.getId())
-                .bookingId(paymentAggregate.getBookingId())
+                .bookingCode(paymentAggregate.getBookingCode())
                 .amount(paymentAggregate.getAmount())
                 .currency(paymentAggregate.getCurrency())
                 .status(paymentAggregate.getStatus())
@@ -50,7 +50,7 @@ public class PaymentKafkaEventPublisherAdapter implements PaymentEventPublisherP
     public void publishPaymentFailed(RequestContext metadata, PaymentAggregate paymentAggregate, String reason) {
         PaymentFailedEvent payload = PaymentFailedEvent.builder()
                 .paymentId(paymentAggregate.getId())
-                .bookingId(paymentAggregate.getBookingId())
+                .bookingCode(paymentAggregate.getBookingCode())
                 .status(paymentAggregate.getStatus())
                 .reason(reason)
                 .build();

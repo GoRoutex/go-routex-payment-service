@@ -2,16 +2,15 @@ package vn.com.routex.hub.payment.service.infrastructure.persistence.adapter.pay
 
 import org.springframework.stereotype.Component;
 import vn.com.routex.hub.payment.service.domain.payment.model.PaymentAggregate;
-import vn.com.routex.hub.payment.service.infrastructure.persistence.jpa.payment.entity.PaymentJpaEntity;
+import vn.com.routex.hub.payment.service.infrastructure.persistence.jpa.payment.entity.PaymentEntity;
 
 @Component
 public class PaymentPersistenceMapper {
 
-    public PaymentAggregate toDomain(PaymentJpaEntity paymentJpaEntity) {
+    public PaymentAggregate toDomain(PaymentEntity paymentJpaEntity) {
         return PaymentAggregate.builder()
                 .id(paymentJpaEntity.getId())
-                .bookingId(paymentJpaEntity.getBookingId())
-                .code(paymentJpaEntity.getCode())
+                .bookingCode(paymentJpaEntity.getBookingCode())
                 .method(paymentJpaEntity.getMethod())
                 .amount(paymentJpaEntity.getAmount())
                 .currency(paymentJpaEntity.getCurrency())
@@ -30,11 +29,10 @@ public class PaymentPersistenceMapper {
                 .build();
     }
 
-    public PaymentJpaEntity toJpaEntity(PaymentAggregate paymentAggregate) {
-        PaymentJpaEntity paymentJpaEntity = PaymentJpaEntity.builder()
+    public PaymentEntity toJpaEntity(PaymentAggregate paymentAggregate) {
+        PaymentEntity paymentJpaEntity = PaymentEntity.builder()
                 .id(paymentAggregate.getId())
-                .bookingId(paymentAggregate.getBookingId())
-                .code(paymentAggregate.getCode())
+                .bookingCode(paymentAggregate.getBookingCode())
                 .method(paymentAggregate.getMethod())
                 .amount(paymentAggregate.getAmount())
                 .currency(paymentAggregate.getCurrency())
