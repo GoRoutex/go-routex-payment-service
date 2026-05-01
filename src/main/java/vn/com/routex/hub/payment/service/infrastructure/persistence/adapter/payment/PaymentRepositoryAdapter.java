@@ -40,4 +40,10 @@ public class PaymentRepositoryAdapter implements PaymentRepositoryPort {
         return paymentEntityRepository.findByTxnRef(txnRef)
                 .map(paymentPersistenceMapper::toDomain);
     }
+
+    @Override
+    public Optional<PaymentAggregate> findByBookingCode(String bookingCode) {
+        return paymentEntityRepository.findByBookingCode(bookingCode)
+                .map(paymentPersistenceMapper::toDomain);
+    }
 }

@@ -14,6 +14,8 @@ import org.springframework.web.context.request.WebRequest;
 import vn.com.go.routex.identity.security.log.SystemLog;
 import vn.com.routex.hub.payment.service.application.command.payment.GetPaymentUrlCommand;
 import vn.com.routex.hub.payment.service.application.command.payment.GetPaymentUrlResult;
+import vn.com.routex.hub.payment.service.application.command.payment.PollingPaymentStatusCommand;
+import vn.com.routex.hub.payment.service.application.command.payment.PollingPaymentStatusResult;
 import vn.com.routex.hub.payment.service.application.services.merchant.PaymentOrchestrationService;
 import vn.com.routex.hub.payment.service.domain.payment.PaymentMethod;
 import vn.com.routex.hub.payment.service.infrastructure.persistence.utils.ApiRequestUtils;
@@ -21,6 +23,7 @@ import vn.com.routex.hub.payment.service.infrastructure.persistence.utils.ApiRes
 import vn.com.routex.hub.payment.service.infrastructure.persistence.utils.HttpUtils;
 import vn.com.routex.hub.payment.service.interfaces.model.base.BaseRequest;
 import vn.com.routex.hub.payment.service.interfaces.model.payment.GetPaymentUrlResponse;
+import vn.com.routex.hub.payment.service.interfaces.model.payment.PollingPaymentStatus;
 
 import java.math.BigDecimal;
 
@@ -28,6 +31,7 @@ import static vn.com.routex.hub.payment.service.infrastructure.persistence.const
 import static vn.com.routex.hub.payment.service.infrastructure.persistence.constant.ApiConstant.API_VERSION;
 import static vn.com.routex.hub.payment.service.infrastructure.persistence.constant.ApiConstant.GET_PAYMENT_URL;
 import static vn.com.routex.hub.payment.service.infrastructure.persistence.constant.ApiConstant.PAYMENT_PATH;
+import static vn.com.routex.hub.payment.service.infrastructure.persistence.constant.ApiConstant.POLLING_STATUS;
 
 @RequestMapping(API_PATH + API_VERSION + PAYMENT_PATH)
 @RestController
@@ -43,6 +47,37 @@ public class PaymentOrchestrationController {
         webDataBinder.setDisallowedFields("requestId", "requestDateTime", "channel", "data");
     }
 
+
+    @GetMapping(POLLING_STATUS)
+    public ResponseEntity<PollingPaymentStatus> getPaymentDetail(
+            @RequestParam String bookingCode,
+            HttpServletRequest servletRequest) {
+
+        BaseRequest request = ApiRequestUtils.getBaseRequestOrDefault(servletRequest);
+        PollingPaymentStatusResult result = paymentOrchestrationService.pollingStatus(PollingPaymentStatusCommand.builder()
+                .bookingCode(bookingCode)
+                .context(HttpUtils.toContext(request))
+                .build());
+
+
+        PollingPaymentStatus response = PollingPaymentStatus.builder()
+                .requestId(request.getRequestId())
+                .requestDateTime(request.getRequestDateTime())
+                .channel(request.getChannel())
+                .result(apiResultFactory.buildSuccess())
+                .data(
+                        PollingPaymentStatus.PollingPaymentStatusData.builder()
+                                .bookingCode(result.bookingCode())
+                                .status(result.status())
+                                .amount(result.amount())
+                                .build()
+                )
+                .build();
+
+        sLog.info("[POLLING-STATUS] Polling Payment Status Response: {}", response);
+
+        return HttpUtils.buildResponse(request, response);
+    }
     @GetMapping(GET_PAYMENT_URL)
     public ResponseEntity<GetPaymentUrlResponse> getPaymentUrl(
             @RequestParam String bookingCode,

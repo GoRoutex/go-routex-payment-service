@@ -149,14 +149,11 @@ public class VNPayServiceImpl implements VNPayService {
             }
 
             if ("00".equals(responseCode)) {
-                payment.markPaid(OffsetDateTime.now());
                 PaymentAggregate savedPayment = paymentRepositoryPort.save(payment);
                 paymentEventPublisherPort.publishPaymentSucceeded(buildMetadata(), savedPayment);
                 return ipnResponse("00", "Confirm Success");
             }
-
             String failureReason = "VNPAY payment failed with response code: " + responseCode;
-            payment.markFailed(OffsetDateTime.now(), failureReason);
             PaymentAggregate failedPayment = paymentRepositoryPort.save(payment);
             paymentEventPublisherPort.publishPaymentFailed(buildMetadata(), failedPayment, failureReason);
             return ipnResponse("00", "Confirm Success");
@@ -196,9 +193,9 @@ public class VNPayServiceImpl implements VNPayService {
     private RequestContext buildMetadata() {
         String now = OffsetDateTime.now().toString();
         return RequestContext.builder()
-                .requestId("vnpay-ipn")
+                .requestId(UUID.randomUUID().toString())
                 .requestDateTime(now)
-                .channel("VNPAY")
+                .channel("ONL")
                 .build();
     }
 

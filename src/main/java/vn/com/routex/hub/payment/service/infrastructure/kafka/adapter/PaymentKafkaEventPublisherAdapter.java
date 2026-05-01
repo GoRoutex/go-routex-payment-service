@@ -2,14 +2,15 @@ package vn.com.routex.hub.payment.service.infrastructure.kafka.adapter;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 import vn.com.routex.hub.payment.service.application.command.common.RequestContext;
+import vn.com.routex.hub.payment.service.application.services.outbox.OutBoxService;
 import vn.com.routex.hub.payment.service.domain.payment.model.PaymentAggregate;
 import vn.com.routex.hub.payment.service.domain.payment.port.PaymentEventPublisherPort;
 import vn.com.routex.hub.payment.service.infrastructure.kafka.event.PaymentFailedEvent;
 import vn.com.routex.hub.payment.service.infrastructure.kafka.event.PaymentSuccessEvent;
 import vn.com.routex.hub.payment.service.infrastructure.kafka.model.KafkaEventMessage;
+import vn.com.routex.hub.payment.service.infrastructure.persistence.utils.ApiRequestUtils;
 import vn.com.routex.hub.payment.service.infrastructure.persistence.utils.JsonUtils;
 
 import java.time.OffsetDateTime;
@@ -19,22 +20,19 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class PaymentKafkaEventPublisherAdapter implements PaymentEventPublisherPort {
 
-    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final OutBoxService outBoxService;
 
-    @Value("${spring.kafka.topics.payment-success}")
-    private String paymentSuccessTopic;
+    @Value("${spring.kafka.topics.payments}")
+    private String paymentTopics;
 
-    @Value("${spring.kafka.topics.payment-failed}")
-    private String paymentFailedTopic;
-
-    @Value("${spring.kafka.events.payment-completed}")
-    private String paymentCompletedEvent;
+    @Value("${spring.kafka.events.payment-succeeded}")
+    private String paymentSucceededEvent;
 
     @Value("${spring.kafka.events.payment-failed}")
     private String paymentFailedEvent;
 
     @Override
-    public void publishPaymentSucceeded(RequestContext metadata, PaymentAggregate paymentAggregate) {
+    public void publishPaymentSucceeded(RequestContext context, PaymentAggregate paymentAggregate) {
         PaymentSuccessEvent payload = PaymentSuccessEvent.builder()
                 .paymentId(paymentAggregate.getId())
                 .bookingCode(paymentAggregate.getBookingCode())
@@ -43,43 +41,20 @@ public class PaymentKafkaEventPublisherAdapter implements PaymentEventPublisherP
                 .status(paymentAggregate.getStatus())
                 .paidAt(paymentAggregate.getPaidAt())
                 .build();
-        publish(metadata, paymentSuccessTopic, paymentCompletedEvent, paymentAggregate.getId(), payload);
+
+        outBoxService.generateEvent(payload.bookingCode(), paymentTopics, paymentSucceededEvent, payload.paymentId(), payload, ApiRequestUtils.getHeader(context));
     }
 
     @Override
-    public void publishPaymentFailed(RequestContext metadata, PaymentAggregate paymentAggregate, String reason) {
+    public void publishPaymentFailed(RequestContext context, PaymentAggregate paymentAggregate, String reason) {
         PaymentFailedEvent payload = PaymentFailedEvent.builder()
                 .paymentId(paymentAggregate.getId())
                 .bookingCode(paymentAggregate.getBookingCode())
                 .status(paymentAggregate.getStatus())
                 .reason(reason)
                 .build();
-        publish(metadata, paymentFailedTopic, paymentFailedEvent, paymentAggregate.getId(), payload);
+
+        outBoxService.generateEvent(payload.bookingCode(), paymentTopics, paymentFailedEvent, payload.paymentId(), payload, ApiRequestUtils.getHeader(context));
     }
 
-    private void publish(
-            RequestContext metadata,
-            String topicName,
-            String eventName,
-            String aggregateId,
-            Object payload
-    ) {
-        try {
-            KafkaEventMessage<Object> message = KafkaEventMessage.builder()
-                    .requestId(metadata.requestId())
-                    .requestDateTime(metadata.requestDateTime())
-                    .channel(metadata.channel())
-                    .eventId(UUID.randomUUID().toString())
-                    .eventName(eventName)
-                    .aggregateId(aggregateId)
-                    .source("payment-service")
-                    .version(1)
-                    .occurredAt(OffsetDateTime.now())
-                    .data(payload)
-                    .build();
-            kafkaTemplate.send(topicName, aggregateId, JsonUtils.parseToJsonStr(message));
-        } catch (Exception ex) {
-            throw new IllegalArgumentException("Kafka publish failed", ex);
-        }
-    }
 }

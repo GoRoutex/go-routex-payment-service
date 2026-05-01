@@ -1,5 +1,6 @@
 package vn.com.routex.hub.payment.service.infrastructure.persistence.jpa.payment.repository;
 
+import aj.org.objectweb.asm.commons.Remapper;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import vn.com.routex.hub.payment.service.domain.booking.PaymentStatus;
@@ -14,4 +15,6 @@ public interface PaymentEntityRepository extends JpaRepository<PaymentEntity, St
     Optional<PaymentEntity> findByBookingCodeAndMethodAndStatus(String bookingCode, PaymentMethod method, PaymentStatus status);
 
     Optional<PaymentEntity> findByTxnRef(String txnRef);
+
+    Optional<PaymentEntity> findByBookingCode(String bookingCode);
 }

@@ -148,8 +148,6 @@ public class ShopeePayMerchantServiceImpl implements PaymentMerchantService {
                             .createdAt(now)
                             .build();
 
-                    sLog.info("paymnet at saving: {}", payment);
-
                     return paymentRepositoryPort.save(payment);
                 });
     }

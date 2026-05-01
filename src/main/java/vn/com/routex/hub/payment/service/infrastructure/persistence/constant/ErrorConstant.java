@@ -9,6 +9,7 @@ public class ErrorConstant {
     public static final String AUTHORIZATION_ERROR = "3200";
     public static final String AUTHORITIES_ERROR = "You are not authorized for this action";
     public static final String TIMEOUT_ERROR_MESSAGE = "Timeout";
+    public static final String PAYMENT_NOT_FOUND = "Payment with %s not found";
     public static final String RECORD_NOT_FOUND = "1407";
     public static final String BOOKING_RECORD_NOT_FOUND = "Booking Record not found";
     public static final String BOOKING_CODE_NOT_FOUND = "Booking information with booking code %s not found";

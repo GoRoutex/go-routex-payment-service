@@ -6,5 +6,9 @@ public enum PaymentStatus {
     PAID,
     FAILED,
     REFUNDED,
-    PENDING
+    PENDING;
+
+    public boolean isFinal() {
+        return this == PAID || this == FAILED;
+    }
 }
