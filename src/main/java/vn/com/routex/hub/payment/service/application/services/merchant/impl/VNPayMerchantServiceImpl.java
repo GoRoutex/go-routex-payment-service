@@ -9,8 +9,8 @@ import vn.com.routex.hub.payment.service.application.services.VNPayService;
 import vn.com.routex.hub.payment.service.application.services.merchant.PaymentMerchantService;
 import vn.com.routex.hub.payment.service.domain.booking.BookingStatus;
 import vn.com.routex.hub.payment.service.domain.booking.PaymentStatus;
-import vn.com.routex.hub.payment.service.domain.booking.model.Booking;
-import vn.com.routex.hub.payment.service.domain.booking.port.BookingRepositoryPort;
+import vn.com.routex.hub.payment.service.domain.booking.model.BookingPaymentContext;
+import vn.com.routex.hub.payment.service.domain.booking.port.BookingPaymentQueryPort;
 import vn.com.routex.hub.payment.service.domain.merchant.MerchantSessionStatus;
 import vn.com.routex.hub.payment.service.domain.merchant.model.MerchantSessionAggregate;
 import vn.com.routex.hub.payment.service.domain.merchant.port.MerchantSessionRepositoryPort;
@@ -24,15 +24,13 @@ import vn.com.routex.hub.payment.service.infrastructure.persistence.utils.Except
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
-import static vn.com.routex.hub.payment.service.infrastructure.persistence.constant.ErrorConstant.BOOKING_CODE_NOT_FOUND;
 import static vn.com.routex.hub.payment.service.infrastructure.persistence.constant.ErrorConstant.INVALID_DATA_ERROR;
-import static vn.com.routex.hub.payment.service.infrastructure.persistence.constant.ErrorConstant.RECORD_NOT_FOUND;
 
 @Service
 @RequiredArgsConstructor
 public class VNPayMerchantServiceImpl implements PaymentMerchantService {
 
-    private final BookingRepositoryPort bookingRepositoryPort;
+    private final BookingPaymentQueryPort bookingPaymentQueryPort;
     private final QrCodeGeneratorPort qrCodeGeneratorPort;
     private final PaymentRepositoryPort paymentRepositoryPort;
     private final MerchantSessionRepositoryPort merchantSessionRepositoryPort;
@@ -48,10 +46,8 @@ public class VNPayMerchantServiceImpl implements PaymentMerchantService {
     @Override
     public GetPaymentUrlResult getPaymentUrl(GetPaymentUrlCommand command) {
 
-        Booking bookingAggregate = bookingRepositoryPort.findByBookingCode(command.bookingCode())
-                .orElseThrow(() -> new BusinessException(command.context().requestId(), command.context().requestDateTime(), command.context().channel(),
-                        ExceptionUtils.buildResultResponse(RECORD_NOT_FOUND, String.format(BOOKING_CODE_NOT_FOUND, command.bookingCode()))));
-        if (!BookingStatus.PENDING_PAYMENT.equals(bookingAggregate.getStatus())) {
+        BookingPaymentContext bookingAggregate = bookingPaymentQueryPort.getBookingPaymentContext(command.bookingCode(), command.context());
+        if (!BookingStatus.PENDING_PAYMENT.equals(bookingAggregate.getBookingStatus())) {
             throw new BusinessException(command.context().requestId(), command.context().requestDateTime(), command.context().channel(),
                     ExceptionUtils.buildResultResponse(INVALID_DATA_ERROR, "Booking Status is not Pending Payment"));
         }
@@ -59,7 +55,6 @@ public class VNPayMerchantServiceImpl implements PaymentMerchantService {
             throw new BusinessException(command.context().requestId(), command.context().requestDateTime(), command.context().channel(),
                     ExceptionUtils.buildResultResponse(INVALID_DATA_ERROR, "Booking Session is expired"));
         }
-
 
         if (command.amount().compareTo(bookingAggregate.getTotalAmount()) != 0) {
             throw new BusinessException(command.context().requestId(), command.context().requestDateTime(), command.context().channel(),
@@ -98,7 +93,7 @@ public class VNPayMerchantServiceImpl implements PaymentMerchantService {
     private MerchantSessionAggregate getOrCreateReusableMerchantSession(
             GetPaymentUrlCommand command,
             PaymentAggregate aggregate,
-            Booking booking,
+            BookingPaymentContext booking,
             String checkoutUrl,
             OffsetDateTime now
     ) {
@@ -125,7 +120,7 @@ public class VNPayMerchantServiceImpl implements PaymentMerchantService {
 
     private PaymentAggregate getOrCreatePendingPayment(
             GetPaymentUrlCommand command,
-            Booking booking,
+            BookingPaymentContext booking,
             OffsetDateTime now
     ) {
         return paymentRepositoryPort

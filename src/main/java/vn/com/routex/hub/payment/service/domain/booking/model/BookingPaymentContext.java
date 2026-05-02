@@ -15,24 +15,11 @@ import java.time.OffsetDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Booking {
-    private String id;
+public class BookingPaymentContext {
+    private String bookingId;
     private String bookingCode;
-    private String routeId;
-    private String merchantId;
-    private String vehicleId;
-    private String customerId;
-    private String customerName;
-    private String customerPhone;
-    private String customerEmail;
-    private String channel;
-    private Integer seatCount;
     private BigDecimal totalAmount;
     private String currency;
-    private BookingStatus status;
-    private OffsetDateTime heldAt;
+    private BookingStatus bookingStatus;
     private OffsetDateTime holdUntil;
-    private OffsetDateTime cancelledAt;
-    private String note;
-    private String creator;
 }
