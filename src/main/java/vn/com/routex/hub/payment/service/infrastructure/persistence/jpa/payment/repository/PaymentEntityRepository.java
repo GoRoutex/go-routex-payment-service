@@ -1,11 +1,9 @@
 package vn.com.routex.hub.payment.service.infrastructure.persistence.jpa.payment.repository;
 
-import aj.org.objectweb.asm.commons.Remapper;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import vn.com.routex.hub.payment.service.domain.booking.PaymentStatus;
 import vn.com.routex.hub.payment.service.domain.payment.PaymentMethod;
-import vn.com.routex.hub.payment.service.domain.payment.model.PaymentAggregate;
 import vn.com.routex.hub.payment.service.infrastructure.persistence.jpa.payment.entity.PaymentEntity;
 
 import java.util.Optional;

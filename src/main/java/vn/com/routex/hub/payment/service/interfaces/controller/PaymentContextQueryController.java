@@ -21,10 +21,11 @@ import vn.com.routex.hub.payment.service.interfaces.model.payment.FetchPaymentCo
 
 import static vn.com.routex.hub.payment.service.infrastructure.persistence.constant.ApiConstant.API_PATH;
 import static vn.com.routex.hub.payment.service.infrastructure.persistence.constant.ApiConstant.API_VERSION;
+import static vn.com.routex.hub.payment.service.infrastructure.persistence.constant.ApiConstant.INTERNAL_PATH;
 import static vn.com.routex.hub.payment.service.infrastructure.persistence.constant.ApiConstant.PAYMENT_PATH;
 
 @RestController
-@RequestMapping(API_PATH + API_VERSION + PAYMENT_PATH + "/payments")
+@RequestMapping(API_PATH + API_VERSION + PAYMENT_PATH + INTERNAL_PATH)
 @RequiredArgsConstructor
 public class PaymentContextQueryController {
 

@@ -1,7 +1,6 @@
 package vn.com.routex.hub.payment.service.domain.payment.model;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

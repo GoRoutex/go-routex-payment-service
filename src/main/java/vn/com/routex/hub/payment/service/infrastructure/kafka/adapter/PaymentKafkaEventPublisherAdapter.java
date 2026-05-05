@@ -9,12 +9,7 @@ import vn.com.routex.hub.payment.service.domain.payment.model.PaymentAggregate;
 import vn.com.routex.hub.payment.service.domain.payment.port.PaymentEventPublisherPort;
 import vn.com.routex.hub.payment.service.infrastructure.kafka.event.PaymentFailedEvent;
 import vn.com.routex.hub.payment.service.infrastructure.kafka.event.PaymentSuccessEvent;
-import vn.com.routex.hub.payment.service.infrastructure.kafka.model.KafkaEventMessage;
 import vn.com.routex.hub.payment.service.infrastructure.persistence.utils.ApiRequestUtils;
-import vn.com.routex.hub.payment.service.infrastructure.persistence.utils.JsonUtils;
-
-import java.time.OffsetDateTime;
-import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
