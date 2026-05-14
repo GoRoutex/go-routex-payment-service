@@ -14,7 +14,6 @@ import vn.com.routex.hub.payment.service.infrastructure.integration.constant.VNP
 import vn.com.routex.hub.payment.service.infrastructure.integration.utils.VNPayUtils;
 import vn.com.routex.hub.payment.service.interfaces.model.vnpay.VNPayIpnResponse;
 
-import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -41,7 +40,7 @@ public class VNPayServiceImpl implements VNPayService {
     private final PaymentEventPublisherPort paymentEventPublisherPort;
 
     @Override
-    public String createPaymentUrl(GetPaymentUrlCommand request, String txnRef) throws UnsupportedEncodingException {
+    public String createPaymentUrl(GetPaymentUrlCommand request, String txnRef) {
         String vnp_Version = "2.1.0";
         String vnp_Command = "pay";
         String orderType = "other";
@@ -149,20 +148,18 @@ public class VNPayServiceImpl implements VNPayService {
             }
 
             if ("00".equals(responseCode)) {
-                PaymentAggregate savedPayment = paymentRepositoryPort.save(payment);
-                paymentEventPublisherPort.publishPaymentSucceeded(buildMetadata(), savedPayment);
+                paymentEventPublisherPort.publishPaymentSucceeded(buildMetadata(), payment);
                 return ipnResponse("00", "Confirm Success");
             }
             String failureReason = "VNPAY payment failed with response code: " + responseCode;
-            PaymentAggregate failedPayment = paymentRepositoryPort.save(payment);
-            paymentEventPublisherPort.publishPaymentFailed(buildMetadata(), failedPayment, failureReason);
+            paymentEventPublisherPort.publishPaymentFailed(buildMetadata(), payment, failureReason);
             return ipnResponse("00", "Confirm Success");
         } catch (Exception ex) {
             return ipnResponse("99", "Unknown error");
         }
     }
 
-    private Map<String, String> collectEncodedFields(HttpServletRequest servletRequest) throws UnsupportedEncodingException {
+    private Map<String, String> collectEncodedFields(HttpServletRequest servletRequest) {
         Map<String, String> fields = new HashMap<>();
         for (Enumeration<String> params = servletRequest.getParameterNames(); params.hasMoreElements(); ) {
             String paramName = params.nextElement();

@@ -34,7 +34,6 @@ public class PaymentKafkaEventPublisherAdapter implements PaymentEventPublisherP
                 .amount(paymentAggregate.getAmount())
                 .currency(paymentAggregate.getCurrency())
                 .status(paymentAggregate.getStatus())
-                .paidAt(paymentAggregate.getPaidAt())
                 .build();
 
         outBoxService.generateEvent(payload.bookingCode(), paymentTopics, paymentSucceededEvent, payload.paymentId(), payload, ApiRequestUtils.getHeader(context));

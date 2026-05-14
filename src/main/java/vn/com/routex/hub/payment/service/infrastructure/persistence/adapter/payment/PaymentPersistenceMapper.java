@@ -27,7 +27,7 @@ public class PaymentPersistenceMapper {
                 .build();
     }
 
-    public PaymentEntity toJpaEntity(PaymentAggregate paymentAggregate) {
+    public PaymentEntity toEntity(PaymentAggregate paymentAggregate) {
         PaymentEntity paymentJpaEntity = PaymentEntity.builder()
                 .id(paymentAggregate.getId())
                 .bookingCode(paymentAggregate.getBookingCode())

@@ -14,7 +14,6 @@ public record PaymentSuccessEvent(
         String bookingCode,
         BigDecimal amount,
         PaymentStatus status,
-        OffsetDateTime paidAt,
         String currency
 ) {
 }

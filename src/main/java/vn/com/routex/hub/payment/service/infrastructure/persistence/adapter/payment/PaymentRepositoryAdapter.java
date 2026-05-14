@@ -31,7 +31,7 @@ public class PaymentRepositoryAdapter implements PaymentRepositoryPort {
     @Override
     public PaymentAggregate save(PaymentAggregate paymentAggregate) {
         return paymentPersistenceMapper.toDomain(
-                paymentEntityRepository.save(paymentPersistenceMapper.toJpaEntity(paymentAggregate))
+                paymentEntityRepository.save(paymentPersistenceMapper.toEntity(paymentAggregate))
         );
     }
 
