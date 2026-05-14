@@ -2,9 +2,11 @@ package vn.com.routex.hub.payment.service;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 import vn.com.go.routex.identity.security.annotation.EnableIdentitySecurity;
 
 @SpringBootApplication
+@EnableFeignClients
 @EnableIdentitySecurity
 public class PaymentApplication {
 

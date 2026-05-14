@@ -30,28 +30,13 @@ spring:
         max.poll.records: 500
 
     events:
-      route-ready-for-sale: "routex.route.ready-for-sale"
-      booking-created: "routex.booking.created"
-      booking-confirmed: "routex.booking.confirmed"
-      booking-cancelled: "routex.booking.cancelled"
-      booking-failed: "routex.booking.failed"
-      payment-initiated: "routex.payment.initiated"
-      payment-completed: "routex.payment.completed"
+      payment-succeeded: "routex.payment.succeeded"
       payment-failed: "routex.payment.failed"
-      payment-refunded: "routex.payment.refunded"
-      seat-reserved: "routex.seat.reserved"
-      seat-released: "routex.seat.released"
-      seat-locked: "routex.seat.locked"
-      notification-email: "routex.notification.email"
-      notification-sms: "routex.notification.sms"
-      notification-activities: "routex.notification.activities"
 
     topics:
-      routes: "route.event.management"
-      bookings: "booking.event.management"
-      payment-success: "payment.success.event.management"
-      payment-failed: "payment.failed.event.management"
-      seats: "seat.event.management"
+      routes: "route.management.event"
+      booking: "route.bookings.event"
+      payments: "route.payments.event"
       notifications: "notification.event.management"
       dead-letter: "bus-dead-letter-queue"
 
@@ -118,4 +103,10 @@ logging:
     org.springframework.kafka: INFO
     org.apache.kafka: WARN
 
+app:
+  payment:
+    checkout-url: http://localhost:8080/api/v1/payment-service/checkout
 
+clients:
+  booking-service:
+    base-url: ${BOOKING_SERVICE_BASE_URL:http://localhost:8080}

@@ -11,10 +11,9 @@ import java.time.OffsetDateTime;
 public record PaymentSuccessEvent(
         String paymentId,
         String customerId,
-        String bookingId,
+        String bookingCode,
         BigDecimal amount,
         PaymentStatus status,
-        OffsetDateTime paidAt,
         String currency
 ) {
 }

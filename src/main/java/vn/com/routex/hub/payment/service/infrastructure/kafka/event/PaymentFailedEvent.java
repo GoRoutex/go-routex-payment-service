@@ -6,7 +6,7 @@ import vn.com.routex.hub.payment.service.domain.booking.PaymentStatus;
 @Builder
 public record PaymentFailedEvent(
         String paymentId,
-        String bookingId,
+        String bookingCode,
         PaymentStatus status,
         String reason
 ) {

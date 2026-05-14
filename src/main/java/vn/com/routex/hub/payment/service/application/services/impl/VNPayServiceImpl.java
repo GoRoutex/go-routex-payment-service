@@ -3,24 +3,32 @@ package vn.com.routex.hub.payment.service.application.services.impl;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import vn.com.routex.hub.payment.service.application.command.common.RequestContext;
+import vn.com.routex.hub.payment.service.application.command.payment.GetPaymentUrlCommand;
 import vn.com.routex.hub.payment.service.application.services.VNPayService;
+import vn.com.routex.hub.payment.service.domain.booking.PaymentStatus;
+import vn.com.routex.hub.payment.service.domain.payment.model.PaymentAggregate;
+import vn.com.routex.hub.payment.service.domain.payment.port.PaymentEventPublisherPort;
+import vn.com.routex.hub.payment.service.domain.payment.port.PaymentRepositoryPort;
 import vn.com.routex.hub.payment.service.infrastructure.integration.constant.VNPayConstant;
 import vn.com.routex.hub.payment.service.infrastructure.integration.utils.VNPayUtils;
-import vn.com.routex.hub.payment.service.interfaces.model.vnpay.PaymentRequest;
+import vn.com.routex.hub.payment.service.interfaces.model.vnpay.VNPayIpnResponse;
 
-import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.UUID;
 
 
 @RequiredArgsConstructor
@@ -28,18 +36,18 @@ import java.util.TimeZone;
 public class VNPayServiceImpl implements VNPayService {
 
     private final VNPayUtils vnPayUtils;
+    private final PaymentRepositoryPort paymentRepositoryPort;
+    private final PaymentEventPublisherPort paymentEventPublisherPort;
 
     @Override
-    public String createPaymentUrl(PaymentRequest request, HttpServletRequest servletRequest) throws UnsupportedEncodingException {
+    public String createPaymentUrl(GetPaymentUrlCommand request, String txnRef) {
         String vnp_Version = "2.1.0";
         String vnp_Command = "pay";
         String orderType = "other";
-        BigDecimal amount = request.getData().getAmount().multiply(BigDecimal.valueOf(100));
+        BigDecimal amount = request.amount().multiply(BigDecimal.valueOf(100));
 
-        String bankCode = request.getData().getBankCode();
-
-        String vnp_TxnRef = vnPayUtils.getRandomNumber(8);
-        String vnp_IpAddr = vnPayUtils.getIpAddress(servletRequest);
+        String bankCode = request.bankCode();
+        String vnp_IpAddr = hasText(request.clientIp()) ? request.clientIp().trim() : "127.0.0.1";
 
         String vnp_TmnCode = VNPayConstant.vnp_TMNCODE;
 
@@ -53,16 +61,11 @@ public class VNPayServiceImpl implements VNPayService {
         if (bankCode != null && !bankCode.isEmpty()) {
             vnp_Params.put("vnp_BankCode", bankCode);
         }
-        vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
-        vnp_Params.put("vnp_OrderInfo", "Thanh toan don hang:" + vnp_TxnRef);
-        vnp_Params.put("vnp_OrderType", orderType);
 
-        String locate = request.getData().getLanguage();
-        if (locate != null && !locate.isEmpty()) {
-            vnp_Params.put("vnp_Locale", locate);
-        } else {
-            vnp_Params.put("vnp_Locale", "vn");
-        }
+        vnp_Params.put("vnp_TxnRef", txnRef);
+        vnp_Params.put("vnp_OrderInfo", "Thanh toan don hang:" + request.bookingCode());
+        vnp_Params.put("vnp_OrderType", orderType);
+        vnp_Params.put("vnp_Locale", "vn");
         vnp_Params.put("vnp_ReturnUrl", VNPayConstant.vnp_RETURNURL);
         vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
 
@@ -105,5 +108,102 @@ public class VNPayServiceImpl implements VNPayService {
         String vnp_SecureHash = vnPayUtils.hmacSHA512(VNPayConstant.SECRET_KEY, hashData.toString());
         queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
         return VNPayConstant.vnp_PAYURL + "?" + queryUrl;
+    }
+
+    @Override
+    public VNPayIpnResponse processIpn(HttpServletRequest servletRequest) {
+        try {
+            Map<String, String> fields = collectEncodedFields(servletRequest);
+            String vnpSecureHash = servletRequest.getParameter("vnp_SecureHash");
+
+            fields.remove("vnp_SecureHashType");
+            fields.remove("vnp_SecureHash");
+
+            String signValue = vnPayUtils.hashAllFields(fields);
+            if (!signValue.equals(vnpSecureHash)) {
+                return ipnResponse("97", "Invalid Checksum");
+            }
+
+            String txnRef = servletRequest.getParameter("vnp_TxnRef");
+            if (!hasText(txnRef)) {
+                return ipnResponse("01", "Order not Found");
+            }
+
+            PaymentAggregate payment = paymentRepositoryPort.findByTxnRef(txnRef)
+                    .orElse(null);
+
+            if (payment == null) {
+                return ipnResponse("01", "Order not Found");
+            }
+
+            if (!isValidAmount(payment, servletRequest.getParameter("vnp_Amount"))) {
+                return ipnResponse("04", "Invalid Amount");
+            }
+            String responseCode = servletRequest.getParameter("vnp_ResponseCode");
+            if (PaymentStatus.PAID.equals(payment.getStatus()) && "00".equals(responseCode)) {
+                return ipnResponse("00", "Confirm Success");
+            }
+            if (!PaymentStatus.PENDING.equals(payment.getStatus())) {
+                return ipnResponse("02", "Order already confirmed");
+            }
+
+            if ("00".equals(responseCode)) {
+                paymentEventPublisherPort.publishPaymentSucceeded(buildMetadata(), payment);
+                return ipnResponse("00", "Confirm Success");
+            }
+            String failureReason = "VNPAY payment failed with response code: " + responseCode;
+            paymentEventPublisherPort.publishPaymentFailed(buildMetadata(), payment, failureReason);
+            return ipnResponse("00", "Confirm Success");
+        } catch (Exception ex) {
+            return ipnResponse("99", "Unknown error");
+        }
+    }
+
+    private Map<String, String> collectEncodedFields(HttpServletRequest servletRequest) {
+        Map<String, String> fields = new HashMap<>();
+        for (Enumeration<String> params = servletRequest.getParameterNames(); params.hasMoreElements(); ) {
+            String paramName = params.nextElement();
+            String paramValue = servletRequest.getParameter(paramName);
+            if (paramValue == null || paramValue.isEmpty()) {
+                continue;
+            }
+            fields.put(
+                    URLEncoder.encode(paramName, StandardCharsets.US_ASCII),
+                    URLEncoder.encode(paramValue, StandardCharsets.US_ASCII)
+            );
+        }
+        return fields;
+    }
+    private boolean isValidAmount(PaymentAggregate payment, String amountParam) {
+        if (!hasText(amountParam)) {
+            return false;
+        }
+        try {
+            BigDecimal returnedAmount = new BigDecimal(amountParam.trim());
+            BigDecimal expectedAmount = payment.getAmount().multiply(BigDecimal.valueOf(100));
+            return expectedAmount.compareTo(returnedAmount) == 0;
+        } catch (NumberFormatException ex) {
+            return false;
+        }
+    }
+
+    private RequestContext buildMetadata() {
+        String now = OffsetDateTime.now().toString();
+        return RequestContext.builder()
+                .requestId(UUID.randomUUID().toString())
+                .requestDateTime(now)
+                .channel("ONL")
+                .build();
+    }
+
+    private VNPayIpnResponse ipnResponse(String rspCode, String message) {
+        return VNPayIpnResponse.builder()
+                .RspCode(rspCode)
+                .Message(message)
+                .build();
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.trim().isEmpty();
     }
 }

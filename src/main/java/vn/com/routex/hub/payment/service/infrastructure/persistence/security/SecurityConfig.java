@@ -41,6 +41,7 @@ public class SecurityConfig {
                         ///
                         .requestMatchers(
                                 "/api/v1/management/authorities/**",
+                                "/api/v1/payment-service/vnpay-ipn",
                                 "/api/v1/management/route-service/**",
                                 "/api/v1/payment-service/**",
                                 "/actuator/**",
