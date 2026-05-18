@@ -1,8 +1,10 @@
 package vn.com.routex.hub.payment.service.application.services.impl;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import vn.com.go.routex.identity.security.log.SystemLog;
 import vn.com.routex.hub.payment.service.application.command.common.RequestContext;
 import vn.com.routex.hub.payment.service.application.command.payment.GetPaymentUrlCommand;
 import vn.com.routex.hub.payment.service.application.services.VNPayService;
@@ -14,6 +16,7 @@ import vn.com.routex.hub.payment.service.infrastructure.integration.constant.VNP
 import vn.com.routex.hub.payment.service.infrastructure.integration.utils.VNPayUtils;
 import vn.com.routex.hub.payment.service.interfaces.model.vnpay.VNPayIpnResponse;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -38,6 +41,7 @@ public class VNPayServiceImpl implements VNPayService {
     private final VNPayUtils vnPayUtils;
     private final PaymentRepositoryPort paymentRepositoryPort;
     private final PaymentEventPublisherPort paymentEventPublisherPort;
+    private final SystemLog sLog = SystemLog.getLogger(this.getClass());
 
     @Override
     public String createPaymentUrl(GetPaymentUrlCommand request, String txnRef) {
@@ -107,6 +111,8 @@ public class VNPayServiceImpl implements VNPayService {
         String queryUrl = query.toString();
         String vnp_SecureHash = vnPayUtils.hmacSHA512(VNPayConstant.SECRET_KEY, hashData.toString());
         queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
+
+        sLog.info("Secure hash: {}", vnp_SecureHash);
         return VNPayConstant.vnp_PAYURL + "?" + queryUrl;
     }
 
@@ -156,6 +162,44 @@ public class VNPayServiceImpl implements VNPayService {
             return ipnResponse("00", "Confirm Success");
         } catch (Exception ex) {
             return ipnResponse("99", "Unknown error");
+        }
+    }
+
+    @Override
+    public void returnUrl(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        //Begin process return from VNPAY
+        Map<String, String> fields = new HashMap<>();
+        for (Enumeration<String> params = request.getParameterNames(); params.hasMoreElements();) {
+            String fieldName = params.nextElement();
+            String fieldValue = request.getParameter(fieldName);
+            if ((fieldValue != null) && (fieldValue.length() > 0)) {
+                fields.put(fieldName, fieldValue);
+            }
+        }
+
+        String vnp_SecureHash = request.getParameter("vnp_SecureHash");
+        if (fields.containsKey("vnp_SecureHashType")) {
+            fields.remove("vnp_SecureHashType");
+        }
+        if (fields.containsKey("vnp_SecureHash")) {
+            fields.remove("vnp_SecureHash");
+        }
+
+        sLog.info("Fields: {}", fields);
+        String signValue = vnPayUtils.hashAllFields(fields);
+
+        sLog.info("Sign value: {}", signValue);
+        String frontendRedirectUrl = "http://localhost:5173/payment-result"; // Link về app frontend của bạn
+
+        if (signValue.equals(vnp_SecureHash)) {
+            if ("00".equals(request.getParameter("vnp_ResponseCode"))) {
+                response.sendRedirect(frontendRedirectUrl + "?status=success&txnRef=" + request.getParameter("vnp_TxnRef"));
+            } else {
+                response.sendRedirect(frontendRedirectUrl + "?status=failed&txnRef=" + request.getParameter("vnp_TxnRef"));
+            }
+
+        } else {
+            response.sendRedirect(frontendRedirectUrl + "?status=invalid_signature");
         }
     }
 

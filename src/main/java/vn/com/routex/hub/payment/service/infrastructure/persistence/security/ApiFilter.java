@@ -100,6 +100,7 @@ public class ApiFilter extends OncePerRequestFilter {
                 || requestURI.contains("/location-service/")
                 || requestURI.startsWith("/swagger-ui")
                 || requestURI.startsWith("/v3/api-docs")
-                || requestURI.equals("/api/v1/payment-service/vnpay-ipn");
+                || requestURI.equals("/api/v1/payment-service/vnpay-ipn")
+                || requestURI.equals("/api/v1/payment-service/return-url");
     }
 }
